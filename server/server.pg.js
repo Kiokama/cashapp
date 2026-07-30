@@ -76,6 +76,15 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
+// Middleware to validate spaceId param
+const validateSpaceId = (req, res, next) => {
+  const { spaceId } = req.params;
+  if (!spaceId || spaceId === 'undefined' || spaceId === 'null' || spaceId.trim() === '') {
+    return res.status(400).json({ error: 'Mã không gian chung (spaceId) không hợp lệ.' });
+  }
+  next();
+};
+
 app.get('/', (req, res) => res.json({ status: 'online (PostgreSQL)' }));
 
 // 1. AUTH
@@ -90,6 +99,13 @@ app.post('/api/v1/auth/register', authLimiter, async (req, res) => {
     await query('INSERT INTO users(id, email, password_hash, full_name, avatar_url) VALUES($1, $2, $3, $4, $5)', 
       [userId, email, password, name || email, avatar]);
     
+    // Auto-create a default space for newly registered user
+    const spaceId = `space-${uuidv4().substring(0, 8)}`;
+    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    await query('INSERT INTO spaces(id, name, emoji, invite_code, created_by) VALUES($1, $2, $3, $4, $5)',
+      [spaceId, 'Không gian chung', '💕', inviteCode, userId]);
+    await query('INSERT INTO space_members(space_id, user_id, role) VALUES($1, $2, $3)', [spaceId, userId, 'ADMIN']);
+
     const token = `jwt_access_token_${userId}_${Date.now()}`;
     res.status(201).json({ status: 'success', token, user: { id: userId, name, email, avatar } });
   } catch (err) {
@@ -119,12 +135,23 @@ app.get('/api/v1/users/me', requireAuth, (req, res) => {
 // 2. SPACES
 app.get('/api/v1/spaces', requireAuth, async (req, res) => {
   try {
-    const { rows } = await query(`
+    let { rows } = await query(`
       SELECT s.* FROM spaces s 
       JOIN space_members sm ON s.id = sm.space_id 
       WHERE sm.user_id = $1
     `, [req.user.id]);
     
+    if (rows.length === 0) {
+      const spaceId = `space-${uuidv4().substring(0, 8)}`;
+      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      await query('INSERT INTO spaces(id, name, emoji, invite_code, created_by) VALUES($1, $2, $3, $4, $5)',
+        [spaceId, 'Không gian chung', '💕', inviteCode, req.user.id]);
+      await query('INSERT INTO space_members(space_id, user_id, role) VALUES($1, $2, $3)', [spaceId, req.user.id, 'ADMIN']);
+      
+      const newSpaceRes = await query('SELECT * FROM spaces WHERE id = $1', [spaceId]);
+      rows = newSpaceRes.rows;
+    }
+
     // Get members for each space
     for (let space of rows) {
       const membersRes = await query('SELECT user_id FROM space_members WHERE space_id = $1', [space.id]);
@@ -161,7 +188,7 @@ app.post('/api/v1/spaces/join', requireAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'DB Error' }); }
 });
 
-app.get('/api/v1/spaces/:spaceId', requireAuth, async (req, res) => {
+app.get('/api/v1/spaces/:spaceId', requireAuth, validateSpaceId, async (req, res) => {
   try {
     const spaceRes = await query('SELECT * FROM spaces WHERE id = $1', [req.params.spaceId]);
     if (spaceRes.rows.length === 0) return res.status(404).json({ error: 'Not found' });
@@ -174,7 +201,7 @@ app.get('/api/v1/spaces/:spaceId', requireAuth, async (req, res) => {
 });
 
 // 3. TRANSACTIONS
-app.get('/api/v1/spaces/:spaceId/transactions', requireAuth, async (req, res) => {
+app.get('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, async (req, res) => {
   const { spaceId } = req.params;
   try {
     const { rows } = await query('SELECT * FROM transactions WHERE space_id = $1 AND is_deleted = false ORDER BY transaction_date DESC LIMIT 50', [spaceId]);
@@ -194,7 +221,7 @@ app.get('/api/v1/spaces/:spaceId/transactions', requireAuth, async (req, res) =>
   } catch (err) { res.status(500).json({ error: 'DB Error' }); }
 });
 
-app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, async (req, res) => {
+app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, async (req, res) => {
   const { spaceId } = req.params;
   const { amount, description, categoryId, category, date, paidBy, splitType, isSettlement } = req.body;
   const txId = uuidv4();
@@ -208,7 +235,7 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, async (req, res) =
     broadcastToSpace(spaceId, 'TRANSACTION_CREATED', { transaction: newTx, actor: req.user });
     res.status(201).json(newTx);
   } catch (err) { 
-    console.error(err);
+    console.error('Create transaction error:', err);
     res.status(500).json({ error: 'DB Error' }); 
   }
 });

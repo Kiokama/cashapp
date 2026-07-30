@@ -29,7 +29,9 @@ function saveState(state) {
 function getInitialState() {
   const saved = loadSavedState();
   if (saved && saved.currentUser) {
-    return { ...saved, isAuthenticated: true, loading: false, toasts: [] };
+    const firstSpaceId = saved.spaces ? Object.keys(saved.spaces)[0] : null;
+    const activeSpaceId = (saved.activeSpaceId && saved.activeSpaceId !== 'undefined') ? saved.activeSpaceId : firstSpaceId;
+    return { ...saved, activeSpaceId, isAuthenticated: true, loading: false, toasts: [] };
   }
   return {
     isAuthenticated: false,
@@ -52,6 +54,8 @@ function appReducer(state, action) {
 
     case 'LOGIN_SUCCESS': {
       const { user, spaces, activeSpaceId, transactions, auditLog, notifications, users } = action.payload;
+      const firstSpaceId = Object.keys(spaces || {})[0] || null;
+      const validActiveSpaceId = (activeSpaceId && activeSpaceId !== 'undefined') ? activeSpaceId : firstSpaceId;
       return {
         ...state,
         isAuthenticated: true,
@@ -59,7 +63,7 @@ function appReducer(state, action) {
         currentUser: user,
         users: users || { [user.id]: user },
         spaces: spaces || {},
-        activeSpaceId: activeSpaceId || Object.keys(spaces || {})[0],
+        activeSpaceId: validActiveSpaceId,
         transactions: transactions || [],
         auditLog: auditLog || [],
         notifications: notifications || [],
@@ -229,6 +233,29 @@ export function AppProvider({ children }) {
     }
   }, [state.toasts]);
 
+  // Helper to ensure valid space ID
+  const getOrEnsureActiveSpaceId = async (providedSpaceId) => {
+    let spaceId = providedSpaceId || state.activeSpaceId;
+    if (!spaceId || spaceId === 'undefined' || spaceId === 'null') {
+      try {
+        const spacesList = await api.getSpaces();
+        if (spacesList && spacesList.length > 0) {
+          spaceId = spacesList[0].id;
+          dispatch({ type: 'SET_ACTIVE_SPACE', payload: spaceId });
+        } else {
+          const newSpaceRes = await api.createSpace({ name: 'Không gian chung', emoji: '💕' });
+          spaceId = newSpaceRes.spaceId || newSpaceRes.space?.id;
+          if (newSpaceRes.space) {
+            dispatch({ type: 'CREATE_SPACE_SUCCESS', payload: newSpaceRes.space });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to resolve active space ID', err);
+      }
+    }
+    return spaceId;
+  };
+
   // API Dispatchers
   const apiActions = {
     async register(userData) {
@@ -303,9 +330,13 @@ export function AppProvider({ children }) {
 
     async addTransaction(payload) {
       try {
-        const newTx = await api.createTransaction(state.activeSpaceId, payload);
-        const auditLogs = await api.getAuditLogs(state.activeSpaceId);
-        const notifications = await api.getNotifications();
+        const spaceId = await getOrEnsureActiveSpaceId(payload?.spaceId);
+        if (!spaceId || spaceId === 'undefined') {
+          throw new Error('Không tìm thấy Không gian chung hợp lệ. Vui lòng thử lại.');
+        }
+        const newTx = await api.createTransaction(spaceId, payload);
+        const auditLogs = await api.getAuditLogs(spaceId).catch(() => []);
+        const notifications = await api.getNotifications().catch(() => []);
 
         dispatch({
           type: 'ADD_TRANSACTION_SUCCESS',
@@ -317,14 +348,18 @@ export function AppProvider({ children }) {
         });
         dispatch({ type: 'ADD_TOAST', payload: { message: 'Đã thêm giao dịch thành công!', type: 'success' } });
       } catch (e) {
-        dispatch({ type: 'ADD_TOAST', payload: { message: e.message, type: 'danger' } });
+        dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Lỗi thêm giao dịch', type: 'danger' } });
       }
     },
 
     async updateTransaction(id, updates) {
       try {
-        const updatedTx = await api.updateTransaction(state.activeSpaceId, id, updates);
-        const auditLogs = await api.getAuditLogs(state.activeSpaceId);
+        const spaceId = await getOrEnsureActiveSpaceId();
+        if (!spaceId || spaceId === 'undefined') {
+          throw new Error('Không tìm thấy Không gian chung hợp lệ.');
+        }
+        const updatedTx = await api.updateTransaction(spaceId, id, updates);
+        const auditLogs = await api.getAuditLogs(spaceId).catch(() => []);
 
         dispatch({
           type: 'UPDATE_TRANSACTION_SUCCESS',
@@ -335,30 +370,38 @@ export function AppProvider({ children }) {
         });
         dispatch({ type: 'ADD_TOAST', payload: { message: 'Đã cập nhật giao dịch!', type: 'success' } });
       } catch (e) {
-        dispatch({ type: 'ADD_TOAST', payload: { message: e.message, type: 'danger' } });
+        dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Lỗi cập nhật giao dịch', type: 'danger' } });
       }
     },
 
     async deleteTransaction(id) {
       try {
-        await api.deleteTransaction(state.activeSpaceId, id);
+        const spaceId = await getOrEnsureActiveSpaceId();
+        if (!spaceId || spaceId === 'undefined') {
+          throw new Error('Không tìm thấy Không gian chung hợp lệ.');
+        }
+        await api.deleteTransaction(spaceId, id);
         dispatch({ type: 'DELETE_TRANSACTION_SUCCESS', payload: { transactionId: id } });
         dispatch({ type: 'ADD_TOAST', payload: { message: 'Đã xóa giao dịch', type: 'warning' } });
       } catch (e) {
-        dispatch({ type: 'ADD_TOAST', payload: { message: e.message, type: 'danger' } });
+        dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Lỗi xóa giao dịch', type: 'danger' } });
       }
     },
 
     async updateBudget(categoryId, amount) {
       try {
-        await api.updateBudget(state.activeSpaceId, categoryId, amount);
+        const spaceId = await getOrEnsureActiveSpaceId();
+        if (!spaceId || spaceId === 'undefined') {
+          throw new Error('Không tìm thấy Không gian chung hợp lệ.');
+        }
+        await api.updateBudget(spaceId, categoryId, amount);
         dispatch({
           type: 'UPDATE_BUDGET_SUCCESS',
-          payload: { spaceId: state.activeSpaceId, categoryId, amount },
+          payload: { spaceId, categoryId, amount },
         });
         dispatch({ type: 'ADD_TOAST', payload: { message: 'Đã cập nhật ngân sách!', type: 'success' } });
       } catch (e) {
-        dispatch({ type: 'ADD_TOAST', payload: { message: e.message, type: 'danger' } });
+        dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Lỗi cập nhật ngân sách', type: 'danger' } });
       }
     },
   };

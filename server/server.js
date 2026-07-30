@@ -237,12 +237,33 @@ app.put('/api/v1/users/me', requireAuth, (req, res) => {
   return res.json(req.user);
 });
 
+const validateSpaceId = (req, res, next) => {
+  const { spaceId } = req.params;
+  if (!spaceId || spaceId === 'undefined' || spaceId === 'null' || spaceId.trim() === '') {
+    return res.status(400).json({ error: 'Mã không gian chung (spaceId) không hợp lệ.' });
+  }
+  next();
+};
+
 /* ==========================================================================
    2. Nhóm API Không gian chung (Shared Spaces)
    ========================================================================== */
 
 app.get('/api/v1/spaces', requireAuth, (req, res) => {
-  const userSpaces = Object.values(db.spaces).filter(s => s.members.includes(req.user.id));
+  let userSpaces = Object.values(db.spaces).filter(s => s.members.includes(req.user.id));
+  if (userSpaces.length === 0) {
+    const newSpace = {
+      id: `space-${uuidv4().substring(0, 8)}`,
+      name: 'Không gian chung',
+      emoji: '💕',
+      inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      members: [req.user.id],
+      createdAt: new Date().toISOString(),
+      budgets: {},
+    };
+    db.spaces[newSpace.id] = newSpace;
+    userSpaces = [newSpace];
+  }
   return res.json(userSpaces);
 });
 
@@ -300,7 +321,7 @@ app.get('/api/v1/spaces/:spaceId', requireAuth, (req, res) => {
    3. Nhóm API Giao dịch (Transactions) - Core Logic & Real-time Trigger
    ========================================================================== */
 
-app.get('/api/v1/spaces/:spaceId/transactions', requireAuth, (req, res) => {
+app.get('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, (req, res) => {
   const { spaceId } = req.params;
   const { startDate, endDate, categoryId, page = 0, size = 50 } = req.query;
 
@@ -332,7 +353,7 @@ app.get('/api/v1/spaces/:spaceId/transactions', requireAuth, (req, res) => {
   });
 });
 
-app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, (req, res) => {
+app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, (req, res) => {
   const { spaceId } = req.params;
   const { amount, description, categoryId, category, transactionDate, date, paidBy, splitType, splitDetails, splits, isSettlement } = req.body;
 
