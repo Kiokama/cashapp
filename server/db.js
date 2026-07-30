@@ -4,9 +4,9 @@ export function createInitialDB() {
   return {
     users: {},
     spaces: {},
-    transactions: {},
+    transactions: [],
     budgets: {},
-    auditLogs: [],
+    auditLog: [],
     notifications: [],
     currentUser: null,
   };
