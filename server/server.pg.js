@@ -89,8 +89,8 @@ app.post('/api/v1/auth/register', authLimiter, async (req, res) => {
     const token = `jwt_access_token_${userId}_${Date.now()}`;
     res.status(201).json({ status: 'success', token, user: { id: userId, name, email, avatar } });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'DB Error' });
+    console.error('Register error:', err);
+    res.status(500).json({ error: err.message || 'DB Error' });
   }
 });
 
@@ -103,7 +103,8 @@ app.post('/api/v1/auth/login', authLimiter, async (req, res) => {
     const token = `jwt_access_token_${user.id}_${Date.now()}`;
     res.json({ status: 'success', token, user: { id: user.id, name: user.full_name, email: user.email, avatar: user.avatar_url } });
   } catch (err) {
-    res.status(500).json({ error: 'DB Error' });
+    console.error('Login error:', err);
+    res.status(500).json({ error: err.message || 'DB Error' });
   }
 });
 
