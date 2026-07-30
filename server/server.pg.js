@@ -54,20 +54,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Auth Middleware
 const requireAuth = async (req, res, next) => {
-  // Simple check for now based on cookies/headers for demo
-  // In production, decode JWT
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
   const token = authHeader.split(' ')[1];
-  const userId = token.split('_')[2]; // format: jwt_access_token_userId_time
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Format: jwt_access_token_userId_timestamp
+  const raw = token.replace('jwt_access_token_', '');
+  const lastUnderscore = raw.lastIndexOf('_');
+  const userId = lastUnderscore !== -1 ? raw.substring(0, lastUnderscore) : raw;
+
   try {
     const { rows } = await query('SELECT * FROM users WHERE id = $1', [userId]);
     if (rows.length === 0) return res.status(401).json({ error: 'User not found' });
     req.user = { id: rows[0].id, name: rows[0].full_name, email: rows[0].email, avatar: rows[0].avatar_url };
     next();
   } catch (err) {
+    console.error('requireAuth error:', err);
     res.status(500).json({ error: 'Auth error' });
   }
 };
