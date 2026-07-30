@@ -305,16 +305,27 @@ export function AppProvider({ children }) {
         const spacesMap = {};
         spacesList.forEach(s => { spacesMap[s.id] = s; });
 
-        const mockUsers = {
-          'user-a': { id: 'user-a', name: 'Minh Anh', email: 'minhanh@email.com' },
-          'user-b': { id: 'user-b', name: 'Thuỳ Linh', email: 'thuylinh@email.com' },
-        };
+        const usersMap = { [profile.id]: profile };
+        
+        // Fetch members of the active space to get real partner data
+        if (activeSpaceId) {
+          try {
+            const spaceDetails = await api.getSpace(activeSpaceId);
+            if (spaceDetails && spaceDetails.memberDetails) {
+              spaceDetails.memberDetails.forEach(u => {
+                usersMap[u.id] = u;
+              });
+            }
+          } catch (e) {
+            console.error('Failed to fetch space details for members', e);
+          }
+        }
 
         dispatch({
           type: 'LOGIN_SUCCESS',
           payload: {
             user: profile,
-            users: mockUsers,
+            users: usersMap,
             spaces: spacesMap,
             activeSpaceId,
             transactions: transactionsList,
@@ -402,6 +413,18 @@ export function AppProvider({ children }) {
         dispatch({ type: 'ADD_TOAST', payload: { message: 'Đã cập nhật ngân sách!', type: 'success' } });
       } catch (e) {
         dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Lỗi cập nhật ngân sách', type: 'danger' } });
+      }
+    },
+
+    async joinSpace(inviteCode) {
+      try {
+        await api.joinSpace({ inviteCode });
+        dispatch({ type: 'ADD_TOAST', payload: { message: 'Tham gia thành công! Đang tải lại...', type: 'success' } });
+        setTimeout(() => window.location.reload(), 1500);
+        return true;
+      } catch (e) {
+        dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Mã mời không hợp lệ', type: 'danger' } });
+        return false;
       }
     },
   };

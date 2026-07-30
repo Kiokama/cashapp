@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
-  Wallet, Receipt, PieChart, Users, Clock
+  Wallet, Receipt, PieChart, Users, Clock, Plus, X
 } from 'lucide-react';
 import {
   formatCurrency, calculateBalance, calculateMonthlyTotal,
@@ -12,10 +12,22 @@ import { CATEGORIES } from '../utils/constants';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
-  const { state } = useApp();
+  const { state, apiActions } = useApp();
   const { currentUser, users, transactions, spaces, activeSpaceId } = state;
   const space = spaces[activeSpaceId];
   const partner = Object.values(users).find(u => u.id !== currentUser?.id);
+
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [inviteCodeInput, setInviteCodeInput] = useState('');
+
+  const handleJoin = async (e) => {
+    e.preventDefault();
+    if (!inviteCodeInput.trim()) return;
+    const success = await apiActions.joinSpace(inviteCodeInput.trim().toUpperCase());
+    if (success) {
+      setShowJoinModal(false);
+    }
+  };
 
   const now = new Date();
   const thisMonth = now.getMonth();
@@ -233,10 +245,52 @@ export default function DashboardPage() {
                   );
                 })}
               </div>
+              <div style={{ marginTop: 'var(--space-md)' }}>
+                <button 
+                  className="btn-secondary" 
+                  style={{ width: '100%' }}
+                  onClick={() => setShowJoinModal(true)}
+                >
+                  <Plus size={18} />
+                  Tham gia phòng khác bằng mã
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Join Space Modal */}
+      {showJoinModal && (
+        <div className="modal-overlay" onClick={() => setShowJoinModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Tham gia Không gian</h2>
+              <button className="modal-close" onClick={() => setShowJoinModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <div className="form-group">
+                <label className="form-label">Mã mời (Invite Code)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Ví dụ: A1B2C3"
+                  value={inviteCodeInput}
+                  onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
+                  required
+                  maxLength={12}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)' }}>
+                <button type="button" className="btn-ghost" onClick={() => setShowJoinModal(false)}>Hủy</button>
+                <button type="submit" className="btn-primary">Tham gia</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
