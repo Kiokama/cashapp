@@ -169,7 +169,7 @@ app.post('/api/v1/auth/login', authLimiter, (req, res) => {
   let user = Object.values(db.users).find(u => u.email.toLowerCase() === (email || '').toLowerCase());
   
   if (!user) {
-    user = db.users['user-a'];
+    return res.status(401).json({ error: 'Email hoặc mật khẩu không chính xác' });
   }
 
   const accessToken = `jwt_access_token_${user.id}_${Date.now()}`;
@@ -199,7 +199,15 @@ app.post('/api/v1/auth/refresh', (req, res) => {
     return res.status(401).json({ error: 'Refresh token không hợp lệ hoặc đã hết hạn' });
   }
 
-  const user = db.users['user-a'];
+  // Extract userId from token (format: jwt_refresh_token_user-xxx_timestamp)
+  const parts = refreshToken.split('_');
+  const userId = parts[3];
+  const user = db.users[userId];
+  
+  if (!user) {
+    return res.status(401).json({ error: 'Người dùng không tồn tại' });
+  }
+
   const newAccessToken = `jwt_access_token_${user.id}_${Date.now()}`;
   return res.json({ token: newAccessToken });
 });

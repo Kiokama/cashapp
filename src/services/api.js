@@ -40,7 +40,7 @@ class ApiService {
       }
     } catch (err) {
       console.error(`[API] Server request to ${endpoint} failed.`, err.message);
-      return null;
+      throw err;
     }
   }
 
