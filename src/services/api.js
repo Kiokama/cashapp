@@ -220,18 +220,36 @@ class ApiService {
 
   // 6. Advanced
   async getAuditLogs(spaceId) {
+    const remote = await this.request(`/spaces/${spaceId}/audit-logs`);
+    if (remote) return remote;
     const res = await mockBackend.getAuditLogs(spaceId);
     return res.data;
   }
 
   async getNotifications() {
+    const remote = await this.request('/notifications');
+    if (remote) return remote;
     const res = await mockBackend.getNotifications();
     return res.data;
   }
 
   async markNotificationRead(notifId) {
+    const remote = await this.request(`/notifications/${notifId}/read`, { method: 'PUT' });
+    if (remote) return remote;
     const res = await mockBackend.markNotificationRead(notifId);
     return res.data;
+  }
+
+  async markAllNotificationsRead() {
+    const remote = await this.request('/notifications/read-all', { method: 'PUT' });
+    if (remote) return remote;
+    return { success: true };
+  }
+
+  async leaveSpace(spaceId) {
+    const remote = await this.request(`/spaces/${spaceId}/leave`, { method: 'POST' });
+    if (remote) return remote;
+    return { success: true };
   }
 }
 

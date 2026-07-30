@@ -630,6 +630,63 @@ app.put('/api/v1/spaces/:spaceId/budgets/:categoryId', requireAuth, (req, res) =
 });
 
 /* ==========================================================================
+   6. Nhóm API Lịch sử Biến động & Thông báo (Audit Logs & Notifications)
+   ========================================================================== */
+
+/**
+ * GET /api/v1/spaces/:spaceId/audit-logs
+ */
+app.get('/api/v1/spaces/:spaceId/audit-logs', requireAuth, (req, res) => {
+  const { spaceId } = req.params;
+  const logs = (db.auditLog || []).map(log => ({
+    ...log,
+    user: db.users[log.userId] || { id: log.userId, name: 'Người dùng' },
+  }));
+  return res.json(logs);
+});
+
+/**
+ * GET /api/v1/notifications
+ */
+app.get('/api/v1/notifications', requireAuth, (req, res) => {
+  const notifs = (db.notifications || []).map(n => ({
+    ...n,
+    actor: db.users[n.actorId] || { id: n.actorId, name: 'Đối phương' },
+  }));
+  return res.json(notifs);
+});
+
+/**
+ * PUT /api/v1/notifications/:notifId/read
+ */
+app.put('/api/v1/notifications/:notifId/read', requireAuth, (req, res) => {
+  const { notifId } = req.params;
+  const item = (db.notifications || []).find(n => n.id === notifId);
+  if (item) item.read = true;
+  return res.json({ success: true, notifId });
+});
+
+/**
+ * PUT /api/v1/notifications/read-all
+ */
+app.put('/api/v1/notifications/read-all', requireAuth, (req, res) => {
+  (db.notifications || []).forEach(n => { n.read = true; });
+  return res.json({ success: true });
+});
+
+/**
+ * POST /api/v1/spaces/:spaceId/leave
+ */
+app.post('/api/v1/spaces/:spaceId/leave', requireAuth, (req, res) => {
+  const { spaceId } = req.params;
+  const space = db.spaces[spaceId];
+  if (space) {
+    space.members = space.members.filter(id => id !== req.user.id);
+  }
+  return res.json({ success: true, message: 'Đã rời không gian chung' });
+});
+
+/* ==========================================================================
    Start HTTP & WebSocket Server
    ========================================================================== */
 server.listen(PORT, () => {
