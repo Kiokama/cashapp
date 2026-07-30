@@ -218,7 +218,10 @@ app.get('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, as
       isSettlement: r.is_settlement
     }));
     res.json({ content: mapped });
-  } catch (err) { res.status(500).json({ error: 'DB Error' }); }
+  } catch (err) { 
+    console.error('GET transactions error:', err);
+    res.status(500).json({ error: 'DB Error: ' + err.message }); 
+  }
 });
 
 app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, async (req, res) => {
@@ -236,7 +239,7 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
     res.status(201).json(newTx);
   } catch (err) { 
     console.error('Create transaction error:', err);
-    res.status(500).json({ error: 'DB Error' }); 
+    res.status(500).json({ error: 'DB Error: ' + err.message }); 
   }
 });
 
