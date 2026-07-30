@@ -36,6 +36,20 @@ class ApiService {
   }
 
   // 1. Auth & Users
+  async register(userData) {
+    const remote = await this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+    if (remote) {
+      if (remote.token) this.setToken(remote.token);
+      return remote;
+    }
+    const res = await mockBackend.login({ email: userData.email, name: userData.name });
+    if (res.data?.token) this.setToken(res.data.token);
+    return res.data;
+  }
+
   async login(credentials) {
     const remote = await this.request('/auth/login', {
       method: 'POST',

@@ -107,15 +107,65 @@ const requireAuth = (req, res, next) => {
    ========================================================================== */
 
 /**
+ * POST /api/v1/auth/register
+ * Body: { name, email, password }
+ */
+app.post('/api/v1/auth/register', authLimiter, (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Vui lòng nhập đầy đủ Email và Mật khẩu' });
+  }
+
+  // Check existing
+  const existing = Object.values(db.users).find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (existing) {
+    return res.status(400).json({ error: 'Email này đã được đăng ký tài khoản' });
+  }
+
+  const userId = `user-${uuidv4().substring(0, 8)}`;
+  const newUser = {
+    id: userId,
+    name: name || email.split('@')[0],
+    email,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || email)}`,
+  };
+
+  db.users[userId] = newUser;
+  db.currentUser = newUser;
+
+  const accessToken = `jwt_access_token_${newUser.id}_${Date.now()}`;
+  const refreshToken = `jwt_refresh_token_${newUser.id}_${Date.now()}`;
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return res.status(201).json({
+    status: 'success',
+    token: accessToken,
+    user: newUser,
+  });
+});
+
+/**
  * POST /api/v1/auth/login
  * Sets HttpOnly Secure Refresh Cookie + Returns Short-lived Access Token
  */
 app.post('/api/v1/auth/login', authLimiter, (req, res) => {
-  const user = db.users['user-a'];
+  const { email } = req.body;
+  let user = Object.values(db.users).find(u => u.email.toLowerCase() === (email || '').toLowerCase());
+  
+  if (!user) {
+    user = db.users['user-a'];
+  }
+
   const accessToken = `jwt_access_token_${user.id}_${Date.now()}`;
   const refreshToken = `jwt_refresh_token_${user.id}_${Date.now()}`;
 
-  // SECURITY: Set Refresh Token as HttpOnly cookie to mitigate XSS attacks
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

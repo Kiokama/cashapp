@@ -231,6 +231,39 @@ export function AppProvider({ children }) {
 
   // API Dispatchers
   const apiActions = {
+    async register(userData) {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        await api.register(userData);
+        const profile = await api.getProfile();
+        const spacesList = await api.getSpaces();
+        const activeSpaceId = spacesList[0]?.id;
+        const transactionsList = activeSpaceId ? await api.getTransactions(activeSpaceId) : [];
+        const auditLogList = activeSpaceId ? await api.getAuditLogs(activeSpaceId) : [];
+        const notifList = await api.getNotifications();
+
+        const spacesMap = {};
+        spacesList.forEach(s => { spacesMap[s.id] = s; });
+
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: profile,
+            users: { [profile.id]: profile },
+            spaces: spacesMap,
+            activeSpaceId,
+            transactions: transactionsList,
+            auditLog: auditLogList,
+            notifications: notifList,
+          },
+        });
+        dispatch({ type: 'ADD_TOAST', payload: { message: 'Đăng ký tài khoản thành công! Thôi nãy giờ chờ bạn rùi!', type: 'success' } });
+      } catch (e) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Đăng ký thất bại', type: 'danger' } });
+      }
+    },
+
     async login(credentials) {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
