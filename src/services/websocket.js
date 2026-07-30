@@ -21,7 +21,7 @@ class WebSocketService {
       return;
     }
 
-    const wsUrl = window.__ENV__?.VITE_WS_URL || import.meta.env.VITE_WS_URL || 'ws://localhost:5000/ws';
+    const wsUrl = window.__ENV__?.VITE_WS_URL || import.meta.env.VITE_WS_URL || 'wss://cashapp-up0q.onrender.com/ws';
 
     try {
       this.ws = new WebSocket(wsUrl);
