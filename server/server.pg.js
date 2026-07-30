@@ -244,6 +244,7 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
 app.get('/api/v1/spaces/:spaceId/analytics/trend', (req, res) => res.json([]));
 app.get('/api/v1/spaces/:spaceId/budgets', (req, res) => res.json({}));
 app.get('/api/v1/spaces/:spaceId/balances', (req, res) => res.json({}));
+app.get('/api/v1/spaces/:spaceId/audit-logs', requireAuth, validateSpaceId, (req, res) => res.json([]));
 app.get('/api/v1/notifications', (req, res) => res.json([]));
 
 server.listen(PORT, () => {
