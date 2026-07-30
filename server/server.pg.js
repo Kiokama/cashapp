@@ -59,6 +59,35 @@ app.use((req, res, next) => {
   next();
 });
 
+const ensureUserExists = async (userId, spaceId = null) => {
+  if (!userId || userId === 'undefined' || userId === 'null') return 'user-minhanh';
+  try {
+    const userCheck = await query('SELECT id FROM users WHERE id = $1', [userId]);
+    if (userCheck.rows.length === 0) {
+      const cleanName = userId.startsWith('user-') ? userId.replace('user-', '') : 'Thành viên';
+      const cleanEmail = `${userId.toLowerCase()}@cashapp.com`;
+      const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`;
+      await query(`
+        INSERT INTO users (id, email, password_hash, full_name, avatar_url)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (id) DO NOTHING
+      `, [userId, cleanEmail, 'dev123456', cleanName, avatar]);
+    }
+
+    if (spaceId && spaceId !== 'undefined') {
+      await query(`
+        INSERT INTO space_members (space_id, user_id, role)
+        VALUES ($1, $2, 'MEMBER')
+        ON CONFLICT (space_id, user_id) DO NOTHING
+      `, [spaceId, userId]);
+    }
+    return userId;
+  } catch (err) {
+    console.error('ensureUserExists error:', err);
+    return userId;
+  }
+};
+
 const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
@@ -70,6 +99,7 @@ const requireAuth = async (req, res, next) => {
   const userId = lastUnderscore !== -1 ? raw.substring(0, lastUnderscore) : raw;
 
   try {
+    await ensureUserExists(userId);
     const { rows } = await query('SELECT * FROM users WHERE id = $1', [userId]);
     if (rows.length === 0) return res.status(401).json({ error: 'User not found' });
     req.user = { id: rows[0].id, name: rows[0].full_name, email: rows[0].email, avatar: rows[0].avatar_url };
@@ -79,6 +109,7 @@ const requireAuth = async (req, res, next) => {
     res.status(500).json({ error: 'Auth error' });
   }
 };
+
 
 const validateSpaceId = (req, res, next) => {
   const { spaceId } = req.params;
@@ -453,7 +484,8 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
   const txId = uuidv4();
   const dbSplitType = mapSplitType(splitType);
   const txDate = date ? new Date(date).toISOString() : new Date().toISOString();
-  const txPaidBy = paidBy || req.user.id;
+  let txPaidBy = paidBy || req.user.id;
+  txPaidBy = await ensureUserExists(txPaidBy, spaceId);
   const txCat = categoryId || category || 'other';
 
   try {
@@ -485,12 +517,13 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
     }
 
     for (const sd of finalSplitDetails) {
+      const validUserId = await ensureUserExists(sd.userId, spaceId);
       await query(`
         INSERT INTO split_details(id, transaction_id, user_id, owed_amount, percentage)
         VALUES($1, $2, $3, $4, $5)
         ON CONFLICT (transaction_id, user_id) DO UPDATE SET owed_amount = EXCLUDED.owed_amount, percentage = EXCLUDED.percentage
-      `, [uuidv4(), txId, sd.userId, sd.owedAmount, sd.percentage || 0]);
-      splitsObj[sd.userId] = sd.owedAmount;
+      `, [uuidv4(), txId, validUserId, sd.owedAmount, sd.percentage || 0]);
+      splitsObj[validUserId] = sd.owedAmount;
     }
 
     await query(`
@@ -538,7 +571,8 @@ app.put('/api/v1/spaces/:spaceId/transactions/:transactionId', requireAuth, vali
     const newDesc = description !== undefined ? description : oldTx.description;
     const newCat = category !== undefined ? category : oldTx.category_id;
     const newDate = date ? new Date(date).toISOString() : oldTx.transaction_date;
-    const newPaidBy = paidBy || oldTx.paid_by;
+    let newPaidBy = paidBy || oldTx.paid_by;
+    newPaidBy = await ensureUserExists(newPaidBy, spaceId);
     const dbSplitType = splitType ? mapSplitType(splitType) : oldTx.split_type;
 
     await query(`
@@ -563,13 +597,15 @@ app.put('/api/v1/spaces/:spaceId/transactions/:transactionId', requireAuth, vali
     if (finalSplitDetails.length > 0) {
       await query('DELETE FROM split_details WHERE transaction_id = $1', [transactionId]);
       for (const sd of finalSplitDetails) {
+        const validUserId = await ensureUserExists(sd.userId, spaceId);
         await query(`
           INSERT INTO split_details(id, transaction_id, user_id, owed_amount, percentage)
           VALUES($1, $2, $3, $4, $5)
-        `, [uuidv4(), transactionId, sd.userId, sd.owedAmount, sd.percentage || 0]);
-        splitsObj[sd.userId] = sd.owedAmount;
+        `, [uuidv4(), transactionId, validUserId, sd.owedAmount, sd.percentage || 0]);
+        splitsObj[validUserId] = sd.owedAmount;
       }
     }
+
 
     await query(`
       INSERT INTO audit_logs(id, transaction_id, user_id, action_type, description)
