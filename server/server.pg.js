@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import { query } from './db.js';
+import { query } from './db.pg.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
