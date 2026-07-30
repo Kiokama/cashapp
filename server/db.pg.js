@@ -1,7 +1,13 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
+import dns from 'dns';
 dotenv.config();
+
+// Force Node.js DNS to prefer IPv4 (Render free instances do not support IPv6 outbound)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const connectionString = process.env.DATABASE_URL;
 
