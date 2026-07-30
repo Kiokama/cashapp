@@ -1,6 +1,9 @@
 import { mockBackend } from './mockBackend';
 
-const API_BASE_URL = window.__ENV__?.VITE_API_URL || import.meta.env.VITE_API_URL || 'https://cashapp-up0q.onrender.com/api/v1';
+let API_BASE_URL = window.__ENV__?.VITE_API_URL || import.meta.env.VITE_API_URL || 'https://cashapp-up0q.onrender.com/api/v1';
+if (API_BASE_URL.includes('localhost')) {
+  API_BASE_URL = 'https://cashapp-up0q.onrender.com/api/v1';
+}
 
 class ApiService {
   constructor() {
