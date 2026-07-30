@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import {
   Plus, Search, Trash2, Edit3, X, Check, Receipt
 } from 'lucide-react';
-import { formatCurrency, formatDate, getInitials, getUserColor } from '../utils/helpers';
+import { formatCurrency, formatDate, getInitials, getUserColor, getUserShare } from '../utils/helpers';
 import { CATEGORIES, SPLIT_TYPES } from '../utils/constants';
 import './TransactionsPage.css';
 
@@ -47,8 +47,8 @@ export default function TransactionsPage() {
   };
 
   const openEdit = (tx) => {
-    const userAShare = tx.splits[currentUser?.id] || 0;
-    const userBShare = tx.splits[partner?.id] || 0;
+    const userAShare = getUserShare(tx, currentUser?.id);
+    const userBShare = getUserShare(tx, partner?.id);
     setForm({
       amount: tx.amount.toString(),
       description: tx.description,
@@ -197,7 +197,7 @@ export default function TransactionsPage() {
           filteredTransactions.map(tx => {
             const cat = CATEGORIES.find(c => c.id === tx.category);
             const paidByUser = users[tx.paidBy];
-            const myShare = tx.splits[currentUser?.id] || 0;
+            const myShare = getUserShare(tx, currentUser?.id);
 
             return (
               <div key={tx.id} className="tx-card glass-card-sm">

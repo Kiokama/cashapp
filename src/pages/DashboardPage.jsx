@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   formatCurrency, calculateBalance, calculateMonthlyTotal,
-  calculateCategoryBreakdown, formatRelativeTime, getInitials, getUserColor
+  calculateCategoryBreakdown, formatRelativeTime, getInitials, getUserColor, getUserShare
 } from '../utils/helpers';
 import { CATEGORIES } from '../utils/constants';
 import './DashboardPage.css';
@@ -151,7 +151,7 @@ export default function DashboardPage() {
                   <div className="recent-amount">
                     <span className="amount-total">{formatCurrency(tx.amount)}</span>
                     <span className="amount-split" style={{ color: isMyExpense ? 'var(--color-danger)' : 'var(--color-warning)' }}>
-                      -{formatCurrency(tx.splits[currentUser?.id] || 0)}
+                      -{formatCurrency(getUserShare(tx, currentUser?.id))}
                     </span>
                   </div>
                 </div>

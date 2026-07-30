@@ -63,6 +63,21 @@ export function generateId() {
 }
 
 /**
+ * Get the exact share/owed amount for a user in a transaction, safely handling both splitDetails and splits schema.
+ */
+export function getUserShare(tx, userId) {
+  if (tx.splitDetails && Array.isArray(tx.splitDetails) && tx.splitDetails.length > 0) {
+    const detail = tx.splitDetails.find(d => d.userId === userId);
+    return detail ? (parseFloat(detail.owedAmount) || 0) : 0;
+  }
+  if (tx.splits && tx.splits[userId] !== undefined) {
+    return parseFloat(tx.splits[userId]) || 0;
+  }
+  // Fallback to 50/50 if not specified
+  return tx.amount / 2;
+}
+
+/**
  * Calculate the net balance between two users in a space
  * Returns positive if user1 is owed money (user2 owes user1),
  * Returns negative if user1 owes money (user1 owes user2)
@@ -74,14 +89,15 @@ export function calculateBalance(transactions, userId1, userId2) {
     if (tx.isSettlement) continue; // skip settlements
 
     const paidBy = tx.paidBy;
-    const splits = tx.splits || {};
+    const shareUser1 = getUserShare(tx, userId1);
+    const shareUser2 = getUserShare(tx, userId2);
     
     if (paidBy === userId1) {
       // user1 paid, user2 owes their share
-      balance += (splits[userId2] || 0);
+      balance += shareUser2;
     } else if (paidBy === userId2) {
       // user2 paid, user1 owes their share
-      balance -= (splits[userId1] || 0);
+      balance -= shareUser1;
     }
   }
 

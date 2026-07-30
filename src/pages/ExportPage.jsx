@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { FileText, Download, FileSpreadsheet, Table2, Calendar, CheckCircle } from 'lucide-react';
-import { formatCurrency, formatDate } from '../utils/helpers';
+import { formatCurrency, formatDate, getUserShare } from '../utils/helpers';
 import { CATEGORIES } from '../utils/constants';
 import './ExportPage.css';
 
@@ -31,7 +31,7 @@ export default function ExportPage() {
         cat?.label || tx.category,
         tx.amount,
         payer?.name || '',
-        tx.splits[currentUser?.id] || 0,
+        getUserShare(tx, currentUser?.id),
         tx.splitType === 'equal' ? 'Chia đều' : tx.splitType === 'percentage' ? 'Theo %' : 'Số tiền cụ thể',
       ];
     });
@@ -98,7 +98,7 @@ export default function ExportPage() {
         doc.text(cat?.label || '', cols[2], y);
         doc.text(tx.amount.toLocaleString(), cols[3], y);
         doc.text((payer?.name || '').substring(0, 12), cols[4], y);
-        doc.text((tx.splits[currentUser?.id] || 0).toLocaleString(), cols[5], y);
+        doc.text(getUserShare(tx, currentUser?.id).toLocaleString(), cols[5], y);
 
         y += 7;
       });
