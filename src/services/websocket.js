@@ -21,7 +21,11 @@ class WebSocketService {
       return;
     }
 
-    const wsUrl = window.__ENV__?.VITE_WS_URL || import.meta.env.VITE_WS_URL || 'wss://cashapp-up0q.onrender.com/ws';
+    let wsUrl = window.__ENV__?.VITE_WS_URL || import.meta.env.VITE_WS_URL || 'wss://cashapp-up0q.onrender.com/ws';
+    // Auto-correct if user accidentally set VITE_WS_URL to end with /api/v1
+    if (wsUrl.endsWith('/api/v1')) {
+      wsUrl = wsUrl.replace('/api/v1', '/ws');
+    }
 
     try {
       this.ws = new WebSocket(wsUrl);
