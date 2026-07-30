@@ -1,8 +1,6 @@
 
-let API_BASE_URL = window.__ENV__?.VITE_API_URL || import.meta.env.VITE_API_URL || 'https://cashapp-up0q.onrender.com/api/v1';
-if (API_BASE_URL.includes('localhost')) {
-  API_BASE_URL = 'https://cashapp-up0q.onrender.com/api/v1';
-}
+// Bỏ qua hoàn toàn biến môi trường của Vercel để tránh lỗi nhập sai (HTTP thay vì HTTPS, thiếu path, v.v.)
+const API_BASE_URL = 'https://cashapp-up0q.onrender.com/api/v1';
 
 class ApiService {
   constructor() {
