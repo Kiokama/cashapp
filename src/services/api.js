@@ -23,12 +23,21 @@ class ApiService {
 
     try {
       const response = await fetch(url, { ...options, headers });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP Error ${response.status}`);
+      
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.indexOf('application/json') !== -1) {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP Error ${response.status}`);
+        }
+        return data;
+      } else {
+        const text = await response.text();
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}: ${text.substring(0, 50)}...`);
+        }
+        return { success: true, data: text };
       }
-      return data;
     } catch (err) {
       console.warn(`[API] Server request to ${endpoint} failed or offline, using Mock fallback.`, err.message);
       return null;
