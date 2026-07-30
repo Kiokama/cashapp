@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: cashapp-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run server
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cashapp-db
+          property: connectionString
+
+databases:
+  - name: cashapp-db
+    plan: free
+    databaseName: cashapp
+    user: cashapp_user

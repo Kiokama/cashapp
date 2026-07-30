@@ -1,0 +1,221 @@
+.settle-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ---- Balance Card ---- */
+.settle-balance {
+  padding: var(--space-2xl);
+  text-align: center;
+}
+
+.balance-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-xl);
+}
+
+.balance-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.balance-person-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.balance-arrow-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.balance-arrow {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.balance-arrow.owed {
+  background: rgba(0, 230, 118, 0.15);
+  color: var(--color-success);
+}
+
+.balance-arrow.owes {
+  background: rgba(255, 82, 82, 0.15);
+  color: var(--color-danger);
+}
+
+.balance-arrow.settled {
+  background: rgba(108, 99, 255, 0.15);
+  color: var(--accent-primary);
+}
+
+.balance-amount {
+  font-size: var(--font-size-3xl);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.balance-amount.positive { color: var(--color-success); }
+.balance-amount.negative { color: var(--color-danger); }
+.balance-amount.neutral { color: var(--accent-primary); }
+
+.balance-status {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.settle-btn {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* ---- How it works ---- */
+.settle-how {
+  padding: var(--space-xl);
+}
+
+.settle-how-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  margin-bottom: var(--space-lg);
+}
+
+.settle-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.settle-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.settle-step strong {
+  font-size: var(--font-size-base);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.settle-step p {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* ---- History ---- */
+.settle-history {
+  padding: var(--space-xl);
+}
+
+.settle-history .section-title {
+  margin-bottom: var(--space-lg);
+}
+
+.settle-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settle-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.settle-item:last-child {
+  border-bottom: none;
+}
+
+.settle-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 230, 118, 0.15);
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settle-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settle-item-desc {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+.settle-item-date {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.settle-item-amount {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* Settle modal */
+.settle-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.settle-modal-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .balance-visual {
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .balance-amount {
+    font-size: var(--font-size-2xl);
+  }
+}

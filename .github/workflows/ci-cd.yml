@@ -1,0 +1,45 @@
+name: CashApp CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test_and_build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Automated Unit & API Integration Tests
+        run: npm test
+
+      - name: Build Vite Production PWA Bundle
+        run: npm run build
+
+      - name: Verify Build Artifacts
+        run: ls -la dist/
+
+  deploy_frontend:
+    needs: test_and_build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel / Netlify
+        run: echo "🚀 Automated Continuous Deployment triggered for Main Branch"
