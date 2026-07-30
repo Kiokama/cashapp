@@ -10,6 +10,8 @@ import SettlePage from './pages/SettlePage';
 import HistoryPage from './pages/HistoryPage';
 import ExportPage from './pages/ExportPage';
 
+import ToastContainer from './components/ToastContainer';
+
 function AppRoutes() {
   const { state } = useApp();
 
@@ -38,6 +40,7 @@ export default function App() {
     <BrowserRouter>
       <AppProvider>
         <AppRoutes />
+        <ToastContainer />
       </AppProvider>
     </BrowserRouter>
   );

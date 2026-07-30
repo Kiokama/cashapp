@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { getInitials, getUserColor } from '../utils/helpers';
 import NotificationPanel from './NotificationPanel';
-import ToastContainer from './ToastContainer';
 import './Layout.css';
 
 const navItems = [
@@ -176,8 +175,6 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
-
-      <ToastContainer />
     </div>
   );
 }
