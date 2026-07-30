@@ -102,6 +102,15 @@ const requireAuth = (req, res, next) => {
   next();
 };
 
+// Root Health Check Route
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    message: '🚀 CashApp API Server is running!',
+    docs: '/api/v1',
+  });
+});
+
 /* ==========================================================================
    1. Nhóm API Xác thực & Người dùng (Auth & Users) + Advanced Security Tokens
    ========================================================================== */
