@@ -193,6 +193,43 @@ app.post('/api/v1/auth/login', authLimiter, (req, res) => {
 });
 
 /**
+ * POST /api/v1/auth/quick-login
+ * Dev Quick Login route
+ */
+app.post('/api/v1/auth/quick-login', authLimiter, (req, res) => {
+  const { account } = req.body;
+  const devAccounts = {
+    minhanh: { id: 'user-minhanh', email: 'minhanh@cashapp.com', name: 'Minh Anh', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=MinhAnh' },
+    thuylinh: { id: 'user-thuylinh', email: 'thuylinh@cashapp.com', name: 'Thùy Linh', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ThuyLinh' },
+    demo: { id: 'user-demo', email: 'demo@cashapp.com', name: 'Khách Trải Nghiệm', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=DemoUser' }
+  };
+
+  const target = devAccounts[account] || devAccounts.minhanh;
+  db.users[target.id] = target;
+  db.currentUser = target;
+
+  if (!db.spaces['space-demo-couple']) {
+    db.spaces['space-demo-couple'] = {
+      id: 'space-demo-couple',
+      name: 'Không gian thương & yêu 💕',
+      emoji: '💕',
+      inviteCode: 'LOVE2026',
+      members: ['user-minhanh', 'user-thuylinh'],
+      createdAt: new Date().toISOString(),
+      budgets: {}
+    };
+  }
+
+  const accessToken = `jwt_access_token_${target.id}_${Date.now()}`;
+  return res.json({
+    status: 'success',
+    token: accessToken,
+    user: target,
+  });
+});
+
+
+/**
  * POST /api/v1/auth/refresh
  * Refresh access token using HttpOnly cookie
  */

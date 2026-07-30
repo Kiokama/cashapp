@@ -1,0 +1,23 @@
+server:
+  port: ${PORT:5000}
+
+spring:
+  application:
+    name: cashapp-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/cashapp}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  jwt:
+    secret: CashAppSuperSecureSecretKeyForJWTTokenSigning2026CoupleAppProMax
+    expiration-ms: 604800000 # 7 days

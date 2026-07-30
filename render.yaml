@@ -1,12 +1,17 @@
 services:
   - type: web
-    name: cashapp-backend
-    env: node
+    name: cashapp-backend-java
+    env: docker
     plan: free
-    buildCommand: npm install --include=dev
-    startCommand: npm run server
+    dockerfilePath: ./server-springboot/Dockerfile
+    dockerContext: ./server-springboot
+    autoDeploy: true
     envVars:
       - key: PORT
         value: 5000
-      - key: NODE_ENV
-        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

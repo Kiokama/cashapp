@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/server.pg.js",
+    "server:java": "cd server-springboot && mvnw spring-boot:run || mvn spring-boot:run",
     "build": "vite build",
+
     "test": "vitest run",
     "lint": "oxlint",
     "preview": "vite preview"

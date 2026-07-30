@@ -339,6 +339,54 @@ export function AppProvider({ children }) {
       }
     },
 
+    async quickLogin(accountType) {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        await api.quickLogin(accountType);
+        const profile = await api.getProfile();
+        const spacesList = await api.getSpaces();
+        const activeSpaceId = spacesList[0]?.id;
+        const transactionsList = activeSpaceId ? await api.getTransactions(activeSpaceId) : [];
+        const auditLogList = activeSpaceId ? await api.getAuditLogs(activeSpaceId) : [];
+        const notifList = await api.getNotifications();
+
+        const spacesMap = {};
+        spacesList.forEach(s => { spacesMap[s.id] = s; });
+
+        const usersMap = { [profile.id]: profile };
+        if (activeSpaceId) {
+          try {
+            const spaceDetails = await api.getSpace(activeSpaceId);
+            if (spaceDetails && spaceDetails.memberDetails) {
+              spaceDetails.memberDetails.forEach(u => {
+                usersMap[u.id] = u;
+              });
+            }
+          } catch (e) {
+            console.error('Failed to fetch space details for members', e);
+          }
+        }
+
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: profile,
+            users: usersMap,
+            spaces: spacesMap,
+            activeSpaceId,
+            transactions: transactionsList,
+            auditLog: auditLogList,
+            notifications: notifList,
+          },
+        });
+        dispatch({ type: 'ADD_TOAST', payload: { message: `⚡ Đã đăng nhập nhanh với tài khoản ${profile.name}!`, type: 'success' } });
+      } catch (e) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'ADD_TOAST', payload: { message: e.message || 'Đăng nhập nhanh thất bại', type: 'danger' } });
+      }
+    },
+
+
     async addTransaction(payload) {
       try {
         const spaceId = await getOrEnsureActiveSpaceId(payload?.spaceId);

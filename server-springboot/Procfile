@@ -1,0 +1,1 @@
+web: java -Dserver.port=$PORT -jar target/cashapp-backend-1.0.0.jar

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Sparkles, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Sparkles, Mail, Lock, User, ArrowRight, Eye, EyeOff, Zap } from 'lucide-react';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -29,6 +29,12 @@ export default function LoginPage() {
     setIsLoading(false);
   };
 
+  const handleQuickLogin = async (accountType) => {
+    setIsLoading(true);
+    await apiActions.quickLogin(accountType);
+    setIsLoading(false);
+  };
+
   return (
     <div className="login-page">
       {/* Ambient background */}
@@ -49,6 +55,44 @@ export default function LoginPage() {
             {isRegister ? 'Tạo tài khoản mới cho cặp đôi' : 'Quản lý chi tiêu thông minh cho cặp đôi'}
           </p>
         </div>
+
+        {/* Dev Quick Login Widget */}
+        <div className="dev-quick-login-card">
+          <div className="dev-quick-header">
+            <Zap size={16} className="dev-icon" />
+            <span>⚡ DEV QUICK LOGIN (1-Click)</span>
+          </div>
+          <div className="dev-quick-buttons">
+            <button
+              type="button"
+              className="dev-quick-btn minhanh"
+              onClick={() => handleQuickLogin('minhanh')}
+              disabled={isLoading}
+            >
+              <span className="dev-avatar">👨‍💻</span>
+              <span>Minh Anh</span>
+            </button>
+            <button
+              type="button"
+              className="dev-quick-btn thuylinh"
+              onClick={() => handleQuickLogin('thuylinh')}
+              disabled={isLoading}
+            >
+              <span className="dev-avatar">👩‍💻</span>
+              <span>Thùy Linh</span>
+            </button>
+            <button
+              type="button"
+              className="dev-quick-btn demo"
+              onClick={() => handleQuickLogin('demo')}
+              disabled={isLoading}
+            >
+              <span className="dev-avatar">🚀</span>
+              <span>Demo Space</span>
+            </button>
+          </div>
+        </div>
+
 
         {/* Social Login */}
         <div className="social-login">

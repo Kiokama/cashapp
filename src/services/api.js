@@ -1,6 +1,6 @@
 
-// Bỏ qua hoàn toàn biến môi trường của Vercel để tránh lỗi nhập sai (HTTP thay vì HTTPS, thiếu path, v.v.)
-const API_BASE_URL = 'https://cashapp-up0q.onrender.com/api/v1';
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const API_BASE_URL = import.meta.env.VITE_API_URL || (isLocal ? 'http://localhost:5000/api/v1' : 'https://cashapp-up0q.onrender.com/api/v1');
 
 class ApiService {
   constructor() {
@@ -62,6 +62,16 @@ class ApiService {
     if (remote?.token) this.setToken(remote.token);
     return remote;
   }
+
+  async quickLogin(account) {
+    const remote = await this.request('/auth/quick-login', {
+      method: 'POST',
+      body: JSON.stringify({ account }),
+    });
+    if (remote?.token) this.setToken(remote.token);
+    return remote;
+  }
+
 
   async logout() {
     this.setToken(null);

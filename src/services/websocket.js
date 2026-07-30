@@ -21,8 +21,8 @@ class WebSocketService {
       return;
     }
 
-    // Bỏ qua hoàn toàn biến môi trường của Vercel để tránh lỗi nhập sai
-    const wsUrl = 'wss://cashapp-up0q.onrender.com/ws';
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const wsUrl = isLocal ? 'ws://localhost:5000/ws' : 'wss://cashapp-up0q.onrender.com/ws';
 
     try {
       this.ws = new WebSocket(wsUrl);
