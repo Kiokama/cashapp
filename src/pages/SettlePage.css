@@ -28,56 +28,58 @@
 }
 
 .balance-person-name {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
 }
 
 .balance-arrow-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-md);
 }
 
 .balance-arrow {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  border: var(--border-width) solid var(--border-default);
+  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
+  background: var(--bg-secondary);
 }
 
 .balance-arrow.owed {
-  background: rgba(0, 230, 118, 0.15);
-  color: var(--color-success);
+  background: var(--color-success);
+  color: white;
 }
 
 .balance-arrow.owes {
-  background: rgba(255, 82, 82, 0.15);
-  color: var(--color-danger);
+  background: var(--color-danger);
+  color: white;
 }
 
 .balance-arrow.settled {
-  background: rgba(108, 99, 255, 0.15);
-  color: var(--accent-primary);
+  background: var(--accent-cta);
+  color: var(--text-primary);
 }
 
 .balance-amount {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-4xl);
   font-weight: 900;
   letter-spacing: -0.03em;
+  color: var(--text-primary);
 }
 
-.balance-amount.positive { color: var(--color-success); }
-.balance-amount.negative { color: var(--color-danger); }
-.balance-amount.neutral { color: var(--accent-primary); }
-
 .balance-status {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
 .settle-btn {
@@ -92,46 +94,55 @@
 }
 
 .settle-how-title {
-  font-size: var(--font-size-md);
-  font-weight: 700;
+  font-size: var(--font-size-lg);
+  font-weight: 800;
   margin-bottom: var(--space-lg);
+  text-transform: uppercase;
 }
 
 .settle-steps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
 }
 
 .settle-step {
   display: flex;
   align-items: flex-start;
   gap: var(--space-md);
+  padding: var(--space-md);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
 }
 
 .step-number {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--accent-gradient);
-  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--border-default);
+  background: var(--accent-cta);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: var(--font-size-sm);
+  font-weight: 800;
+  font-size: var(--font-size-md);
   flex-shrink: 0;
+  box-shadow: 2px 2px 0px 0px var(--border-default);
 }
 
 .settle-step strong {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
+  font-weight: 800;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .settle-step p {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* ---- History ---- */
@@ -141,35 +152,40 @@
 
 .settle-history .section-title {
   margin-bottom: var(--space-lg);
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .settle-list {
   display: flex;
   flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .settle-item {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--border-default);
-}
-
-.settle-item:last-child {
-  border-bottom: none;
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .settle-item-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(0, 230, 118, 0.15);
-  color: var(--color-success);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-default);
+  background: var(--color-success);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 2px 2px 0px 0px var(--border-default);
 }
 
 .settle-item-info {
@@ -181,29 +197,31 @@
 
 .settle-item-desc {
   font-size: var(--font-size-base);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .settle-item-date {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
   color: var(--text-tertiary);
 }
 
 .settle-item-amount {
-  font-size: var(--font-size-base);
-  font-weight: 700;
-  color: var(--color-success);
+  font-size: var(--font-size-md);
+  font-weight: 800;
+  color: var(--text-primary);
 }
 
 /* Settle modal */
 .settle-modal-body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-xl);
 }
 
 .settle-modal-desc {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
+  font-weight: 600;
   color: var(--text-secondary);
   line-height: 1.6;
 }

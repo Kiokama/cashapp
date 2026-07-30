@@ -15,23 +15,23 @@ const chartOptions = {
   plugins: {
     legend: {
       labels: {
-        color: '#9a9ab0',
-        font: { family: 'Inter', size: 12 },
+        color: '#0F172A',
+        font: { family: 'Space Grotesk', size: 12, weight: 700 },
         padding: 16,
         usePointStyle: true,
         pointStyleWidth: 10,
       },
     },
     tooltip: {
-      backgroundColor: '#1e2030',
-      titleColor: '#f0f0f5',
-      bodyColor: '#9a9ab0',
-      borderColor: 'rgba(255,255,255,0.08)',
-      borderWidth: 1,
+      backgroundColor: '#FFFFFF',
+      titleColor: '#0F172A',
+      bodyColor: '#0F172A',
+      borderColor: '#0F172A',
+      borderWidth: 3,
       padding: 12,
-      cornerRadius: 8,
-      titleFont: { family: 'Inter', weight: 600 },
-      bodyFont: { family: 'Inter' },
+      cornerRadius: 0,
+      titleFont: { family: 'Space Grotesk', weight: 800 },
+      bodyFont: { family: 'Space Grotesk', weight: 600 },
       callbacks: {
         label: (ctx) => {
           const val = ctx.parsed.y !== undefined ? ctx.parsed.y : ctx.parsed;
@@ -69,26 +69,26 @@ export default function AnalyticsPage() {
       const cat = CATEGORIES.find(c => c.id === catId);
       // Convert CSS var references to actual hex colors
       const colorMap = {
-        food: '#ff6b6b',
-        housing: '#6c63ff',
-        dating: '#f06292',
-        shopping: '#ffa726',
-        transport: '#40c4ff',
-        entertainment: '#ba68c8',
-        utilities: '#26a69a',
-        health: '#66bb6a',
-        other: '#78909c',
+        food: '#F59E0B',
+        housing: '#8B5CF6',
+        dating: '#EC4899',
+        shopping: '#FBBF24',
+        transport: '#3B82F6',
+        entertainment: '#A855F7',
+        utilities: '#10B981',
+        health: '#14B8A6',
+        other: '#64748B',
       };
-      return colorMap[catId] || '#78909c';
+      return colorMap[catId] || '#64748B';
     });
 
     return {
       labels,
       datasets: [{
         data,
-        backgroundColor: colors.map(c => c + '40'),
-        borderColor: colors,
-        borderWidth: 2,
+        backgroundColor: colors,
+        borderColor: '#0F172A',
+        borderWidth: 3,
         hoverOffset: 8,
       }],
     };
@@ -102,16 +102,17 @@ export default function AnalyticsPage() {
     datasets: [{
       label: 'Tổng chi tiêu',
       data: monthlyTrend.map(m => m.total),
-      backgroundColor: 'rgba(108, 99, 255, 0.2)',
-      borderColor: '#6c63ff',
-      borderWidth: 2,
-      borderRadius: chartType === 'bar' ? 8 : 0,
+      backgroundColor: chartType === 'bar' ? '#FBBF24' : '#FBBF24',
+      borderColor: '#0F172A',
+      borderWidth: 3,
+      borderRadius: 0,
       fill: chartType === 'line',
-      tension: 0.4,
-      pointBackgroundColor: '#6c63ff',
-      pointBorderColor: '#6c63ff',
-      pointRadius: chartType === 'line' ? 4 : 0,
-      pointHoverRadius: 6,
+      tension: 0,
+      pointBackgroundColor: '#FBBF24',
+      pointBorderColor: '#0F172A',
+      pointBorderWidth: 3,
+      pointRadius: chartType === 'line' ? 6 : 0,
+      pointHoverRadius: 8,
     }],
   }), [monthlyTrend, chartType]);
 
@@ -120,13 +121,13 @@ export default function AnalyticsPage() {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: '#5e5e76', font: { family: 'Inter', size: 12 } },
+        ticks: { color: '#0F172A', font: { family: 'Space Grotesk', size: 12, weight: 700 } },
       },
       y: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
+        grid: { color: '#E2E8F0', drawBorder: true, borderColor: '#0F172A' },
         ticks: {
-          color: '#5e5e76',
-          font: { family: 'Inter', size: 11 },
+          color: '#0F172A',
+          font: { family: 'Space Grotesk', size: 11, weight: 700 },
           callback: (val) => (val / 1000000).toFixed(1) + 'M',
         },
       },

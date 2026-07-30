@@ -153,7 +153,7 @@ export default function TransactionsPage() {
   return (
     <div className="transactions-page">
       {/* Header */}
-      <div className="tx-header animate-fadeInUp">
+      <div className="tx-header glass-card animate-fadeInUp" style={{ padding: 'var(--space-md)' }}>
         <div className="tx-search-bar">
           <Search size={18} className="search-icon" />
           <input
@@ -211,7 +211,7 @@ export default function TransactionsPage() {
                       <span>{formatDate(tx.date)}</span>
                       <span>•</span>
                       <span className="tx-paid-by">
-                        <div className="avatar avatar-sm" style={{ background: getUserColor(tx.paidBy), width: 18, height: 18, fontSize: '8px' }}>
+                        <div className="avatar avatar-sm" style={{ background: getUserColor(tx.paidBy) }}>
                           {getInitials(paidByUser?.name)}
                         </div>
                         {paidByUser?.name} trả
