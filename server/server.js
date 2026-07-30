@@ -10,6 +10,9 @@ import { createInitialDB } from './db.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Support reverse proxy (Render, Vercel, Nginx) for rate-limiting & IP tracking
+app.set('trust proxy', 1);
+
 // Security & Middlewares
 app.use(cors({
   origin: true,
