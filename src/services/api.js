@@ -40,6 +40,9 @@ class ApiService {
       }
     } catch (err) {
       console.error(`[API] Server request to ${endpoint} failed.`, err.message);
+      if (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
+        throw new Error('Lỗi kết nối máy chủ (Backend có thể đang khởi động hoặc mất kết nối). Vui lòng thử lại sau 30 giây.');
+      }
       throw err;
     }
   }

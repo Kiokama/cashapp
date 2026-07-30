@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  build: {
+    sourcemap: false, // Prevents Firefox file:/// security warnings from Vercel Source Maps
+  },
   plugins: [
     react(),
     VitePWA({
