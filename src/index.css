@@ -669,8 +669,4 @@ img {
 .toast-info { background: var(--color-info); color: white; }
 
 /* ---- Responsive ---- */
-@media (max-width: 768px) {
-  :root {
-    --sidebar-width: 0px;
-  }
-}
+/* Removed broken sidebar-width override */

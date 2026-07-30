@@ -11,9 +11,9 @@ export const CATEGORIES = [
 ];
 
 export const SPLIT_TYPES = {
-  EQUAL: 'equal',
-  PERCENTAGE: 'percentage',
-  EXACT: 'exact',
+  EQUAL: 'SPLIT_EQUAL',
+  PERCENTAGE: 'SPLIT_PERCENTAGE',
+  EXACT: 'SPLIT_EXACT',
 };
 
 export const CURRENCY_SYMBOL = '₫';
