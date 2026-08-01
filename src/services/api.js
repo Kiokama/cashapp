@@ -21,29 +21,42 @@ class ApiService {
       ...options.headers,
     };
 
-    try {
-      const response = await fetch(url, { ...options, headers });
-      
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.indexOf('application/json') !== -1) {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || `HTTP Error ${response.status}`);
+    const maxRetries = options.retries !== undefined ? options.retries : 3;
+    let delay = 1500;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, { ...options, headers });
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || `HTTP Error ${response.status}`);
+          }
+          return data;
+        } else {
+          const text = await response.text();
+          if (!response.ok) {
+            throw new Error(`HTTP Error ${response.status}: ${text.substring(0, 50)}...`);
+          }
+          return { success: true, data: text };
         }
-        return data;
-      } else {
-        const text = await response.text();
-        if (!response.ok) {
-          throw new Error(`HTTP Error ${response.status}: ${text.substring(0, 50)}...`);
+      } catch (err) {
+        const isNetworkErr = err.name === 'TypeError' || err.message.includes('NetworkError') || err.message.includes('Failed to fetch');
+        if (isNetworkErr && attempt < maxRetries) {
+          console.warn(`[API] Connection attempt ${attempt + 1} failed for ${endpoint}. Retrying in ${delay}ms... (Render cold start)`);
+          await new Promise((r) => setTimeout(r, delay));
+          delay *= 1.5;
+          continue;
         }
-        return { success: true, data: text };
+
+        console.error(`[API] Server request to ${endpoint} failed.`, err.message);
+        if (isNetworkErr) {
+          throw new Error('Máy chủ Backend đang khởi động (Render Cold-Start). Vui lòng đợi 15-30 giây và nhấn thử lại.');
+        }
+        throw err;
       }
-    } catch (err) {
-      console.error(`[API] Server request to ${endpoint} failed.`, err.message);
-      if (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
-        throw new Error('Lỗi kết nối máy chủ (Backend có thể đang khởi động hoặc mất kết nối). Vui lòng thử lại sau 30 giây.');
-      }
-      throw err;
     }
   }
 

@@ -12,7 +12,8 @@ const PORT = process.env.PORT || 5000;
 
 app.set('trust proxy', 1);
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: true, credentials: true, optionsSuccessStatus: 200 }));
+app.options('*', cors({ origin: true, credentials: true, optionsSuccessStatus: 200 }));
 app.use(express.json());
 app.use(cookieParser());
 
