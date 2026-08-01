@@ -477,8 +477,22 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
   const { spaceId } = req.params;
   const { amount, description, categoryId, category, date, paidBy, splitType, splits, splitDetails, isSettlement } = req.body;
 
-  if (!amount || amount <= 0) {
+  const numAmount = parseFloat(amount);
+  if (!numAmount || numAmount <= 0 || isNaN(numAmount)) {
     return res.status(400).json({ error: 'Số tiền giao dịch phải lớn hơn 0' });
+  }
+
+  let totalOwed = 0;
+  if (splitDetails && Array.isArray(splitDetails) && splitDetails.length > 0) {
+    totalOwed = splitDetails.reduce((sum, item) => sum + (parseFloat(item.owedAmount) || 0), 0);
+  } else if (splits && Object.keys(splits).length > 0) {
+    totalOwed = Object.values(splits).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+  }
+
+  if (!isSettlement && totalOwed > 0 && Math.abs(totalOwed - numAmount) > 1) {
+    return res.status(400).json({
+      error: `Lỗi Validate Backend: Tổng số tiền chia (${totalOwed.toLocaleString('vi-VN')}₫) không bằng tổng số tiền giao dịch (${numAmount.toLocaleString('vi-VN')}₫)`,
+    });
   }
 
   const txId = uuidv4();
@@ -492,7 +506,7 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
     await query(`
       INSERT INTO transactions(id, space_id, amount, description, category_id, transaction_date, paid_by, split_type, is_settlement) 
       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, [txId, spaceId, amount, description || 'Giao dịch mới', txCat, txDate, txPaidBy, dbSplitType, !!isSettlement]);
+    `, [txId, spaceId, numAmount, description || 'Giao dịch mới', txCat, txDate, txPaidBy, dbSplitType, !!isSettlement]);
 
     let finalSplitDetails = [];
     let splitsObj = splits || {};
@@ -503,12 +517,12 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
       finalSplitDetails = Object.entries(splitsObj).map(([uid, owed]) => ({
         userId: uid,
         owedAmount: parseFloat(owed) || 0,
-        percentage: amount > 0 ? Math.round(((parseFloat(owed) || 0) / amount) * 100) : 0,
+        percentage: numAmount > 0 ? Math.round(((parseFloat(owed) || 0) / numAmount) * 100) : 0,
       }));
     } else {
       const memRes = await query('SELECT user_id FROM space_members WHERE space_id = $1', [spaceId]);
       const members = memRes.rows.map(r => r.user_id);
-      const share = amount / (members.length || 1);
+      const share = numAmount / (members.length || 1);
       finalSplitDetails = members.map(uid => ({
         userId: uid,
         owedAmount: share,
@@ -534,7 +548,7 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, a
     const newTx = {
       id: txId,
       spaceId,
-      amount: parseFloat(amount),
+      amount: numAmount,
       description: description || 'Giao dịch mới',
       category: txCat,
       date: txDate,
@@ -568,6 +582,24 @@ app.put('/api/v1/spaces/:spaceId/transactions/:transactionId', requireAuth, vali
 
     const oldTx = txRes.rows[0];
     const newAmount = amount !== undefined ? parseFloat(amount) : parseFloat(oldTx.amount);
+
+    if (amount !== undefined && (newAmount <= 0 || isNaN(newAmount))) {
+      return res.status(400).json({ error: 'Số tiền giao dịch phải lớn hơn 0' });
+    }
+
+    let totalOwed = 0;
+    if (splitDetails && Array.isArray(splitDetails) && splitDetails.length > 0) {
+      totalOwed = splitDetails.reduce((sum, item) => sum + (parseFloat(item.owedAmount) || 0), 0);
+    } else if (splits && Object.keys(splits).length > 0) {
+      totalOwed = Object.values(splits).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+    }
+
+    if (!oldTx.is_settlement && totalOwed > 0 && Math.abs(totalOwed - newAmount) > 1) {
+      return res.status(400).json({
+        error: `Lỗi Validate Backend: Tổng số tiền chia (${totalOwed.toLocaleString('vi-VN')}₫) không bằng tổng số tiền giao dịch (${newAmount.toLocaleString('vi-VN')}₫)`,
+      });
+    }
+
     const newDesc = description !== undefined ? description : oldTx.description;
     const newCat = category !== undefined ? category : oldTx.category_id;
     const newDate = date ? new Date(date).toISOString() : oldTx.transaction_date;
@@ -605,7 +637,6 @@ app.put('/api/v1/spaces/:spaceId/transactions/:transactionId', requireAuth, vali
         splitsObj[validUserId] = sd.owedAmount;
       }
     }
-
 
     await query(`
       INSERT INTO audit_logs(id, transaction_id, user_id, action_type, description)

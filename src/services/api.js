@@ -211,13 +211,11 @@ class ApiService {
   async markAllNotificationsRead() {
     const remote = await this.request('/notifications/read-all', { method: 'PUT' });
     return remote;
-    return { success: true };
   }
 
   async leaveSpace(spaceId) {
     const remote = await this.request(`/spaces/${spaceId}/leave`, { method: 'POST' });
     return remote;
-    return { success: true };
   }
 }
 

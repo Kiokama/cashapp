@@ -73,24 +73,33 @@ export default function TransactionsPage() {
     let splits = {};
 
     switch (form.splitType) {
-      case SPLIT_TYPES.EQUAL:
+      case SPLIT_TYPES.EQUAL: {
+        const half = Math.floor(amount / 2);
         splits = {
-          [userAId]: Math.round(amount / 2),
-          [userBId]: Math.round(amount / 2),
+          [userAId]: half,
+          [userBId]: amount - half,
         };
         break;
-      case SPLIT_TYPES.PERCENTAGE:
+      }
+      case SPLIT_TYPES.PERCENTAGE: {
+        const shareA = Math.round(amount * (form.splitPercentA / 100));
         splits = {
-          [userAId]: Math.round(amount * (form.splitPercentA / 100)),
-          [userBId]: Math.round(amount * (form.splitPercentB / 100)),
+          [userAId]: shareA,
+          [userBId]: amount - shareA,
         };
         break;
+      }
       case SPLIT_TYPES.EXACT:
         splits = {
           [userAId]: parseFloat(form.splitAmountA) || 0,
           [userBId]: parseFloat(form.splitAmountB) || 0,
         };
         break;
+      default:
+        splits = {
+          [userAId]: Math.floor(amount / 2),
+          [userBId]: amount - Math.floor(amount / 2),
+        };
     }
 
     return splits;

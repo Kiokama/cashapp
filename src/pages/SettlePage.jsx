@@ -7,7 +7,7 @@ import { formatCurrency, calculateBalance, getInitials, getUserColor } from '../
 import './SettlePage.css';
 
 export default function SettlePage() {
-  const { state, dispatch } = useApp();
+  const { state, apiActions } = useApp();
   const { currentUser, users, transactions, activeSpaceId } = state;
   const partner = Object.values(users).find(u => u.id !== currentUser?.id);
 
@@ -26,28 +26,28 @@ export default function SettlePage() {
       .sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [transactions]);
 
-  const handleSettle = () => {
+  const handleSettle = async () => {
     const amount = parseFloat(settleAmount);
     if (!amount || amount <= 0) return;
 
-    dispatch({
-      type: 'ADD_TRANSACTION',
-      payload: {
+    const payerId = balance < 0 ? currentUser.id : partner.id;
+    const receiverId = balance < 0 ? partner.id : currentUser.id;
+
+    if (apiActions.createSettlement) {
+      await apiActions.createSettlement({ payerId, receiverId, amount });
+    } else {
+      await apiActions.addTransaction({
         spaceId: activeSpaceId,
         amount,
         description: `Thanh toán cấn trừ`,
         category: 'other',
         date: new Date().toISOString(),
-        paidBy: balance < 0 ? currentUser.id : partner.id,
+        paidBy: payerId,
         splitType: 'exact',
-        splits: {},
+        splits: { [receiverId]: amount },
         isSettlement: true,
-      },
-    });
-    dispatch({
-      type: 'ADD_TOAST',
-      payload: { message: 'Đã ghi nhận thanh toán!', type: 'success' },
-    });
+      });
+    }
     setShowSettleModal(false);
     setSettleAmount('');
   };

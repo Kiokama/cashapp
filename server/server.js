@@ -394,29 +394,30 @@ app.post('/api/v1/spaces/:spaceId/transactions', requireAuth, validateSpaceId, (
   const { spaceId } = req.params;
   const { amount, description, categoryId, category, transactionDate, date, paidBy, splitType, splitDetails, splits, isSettlement } = req.body;
 
-  if (!amount || amount <= 0) {
+  const numAmount = parseFloat(amount);
+  if (!numAmount || numAmount <= 0 || isNaN(numAmount)) {
     return res.status(400).json({ error: 'Số tiền giao dịch phải lớn hơn 0' });
   }
 
   let finalDetails = splitDetails;
   let totalOwed = 0;
 
-  if (splitDetails && Array.isArray(splitDetails)) {
+  if (splitDetails && Array.isArray(splitDetails) && splitDetails.length > 0) {
     totalOwed = splitDetails.reduce((sum, item) => sum + (parseFloat(item.owedAmount) || 0), 0);
-  } else if (splits) {
+  } else if (splits && Object.keys(splits).length > 0) {
     totalOwed = Object.values(splits).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
   }
 
-  if (!isSettlement && Math.abs(totalOwed - amount) > 1) {
+  if (!isSettlement && totalOwed > 0 && Math.abs(totalOwed - numAmount) > 1) {
     return res.status(400).json({
-      error: `Lỗi Validate Backend: Tổng số tiền chia (${totalOwed.toLocaleString()}₫) không bằng tổng số tiền giao dịch (${amount.toLocaleString()}₫)`,
+      error: `Lỗi Validate Backend: Tổng số tiền chia (${totalOwed.toLocaleString()}₫) không bằng tổng số tiền giao dịch (${numAmount.toLocaleString()}₫)`,
     });
   }
 
   const newTx = {
     id: uuidv4(),
     spaceId,
-    amount: parseFloat(amount),
+    amount: numAmount,
     description: description || 'Giao dịch mới',
     category: categoryId || category || 'other',
     date: transactionDate || date || new Date().toISOString(),
@@ -461,6 +462,26 @@ app.put('/api/v1/spaces/:spaceId/transactions/:transactionId', requireAuth, (req
 
   const oldTx = db.transactions[index];
   const updates = req.body;
+  const checkAmount = updates.amount !== undefined ? parseFloat(updates.amount) : oldTx.amount;
+
+  if (updates.amount !== undefined && (checkAmount <= 0 || isNaN(checkAmount))) {
+    return res.status(400).json({ error: 'Số tiền giao dịch phải lớn hơn 0' });
+  }
+
+  let totalOwed = 0;
+  const checkDetails = updates.splitDetails || oldTx.splitDetails;
+  const checkSplits = updates.splits || oldTx.splits;
+  if (checkDetails && Array.isArray(checkDetails) && checkDetails.length > 0) {
+    totalOwed = checkDetails.reduce((sum, item) => sum + (parseFloat(item.owedAmount) || 0), 0);
+  } else if (checkSplits && Object.keys(checkSplits).length > 0) {
+    totalOwed = Object.values(checkSplits).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+  }
+
+  if (!oldTx.isSettlement && totalOwed > 0 && Math.abs(totalOwed - checkAmount) > 1) {
+    return res.status(400).json({
+      error: `Lỗi Validate Backend: Tổng số tiền chia (${totalOwed.toLocaleString()}₫) không bằng tổng số tiền giao dịch (${checkAmount.toLocaleString()}₫)`,
+    });
+  }
 
   const updatedTx = {
     ...oldTx,
